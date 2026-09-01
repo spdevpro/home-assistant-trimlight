@@ -1,7 +1,11 @@
 # Trimlight for Home Assistant
 
+<p align="center">
+  <img src="custom_components/trimlight/brand/logo.png" alt="Trimlight" width="256">
+</p>
+
 Local Home Assistant integration for Trimlight controllers using the
-Trimlight V3 HTTP API.
+Trimlight Edge Pro HTTP API.
 
 > [!WARNING]
 > This integration and the supported Trimlight firmware are currently in beta.
@@ -20,7 +24,7 @@ Trimlight V3 HTTP API.
 
 ## Requirements
 
-- Home Assistant 2026.9.0 or newer.
+- Home Assistant 2026.9.0b0 or newer.
 - Python 3.14 or newer for development.
 - A controller firmware that exposes the DID-only mDNS identity and the V2
   runtime-state/static-output HTTP API.
@@ -75,6 +79,8 @@ After the repository is published, add
 `https://github.com/spdevpro/home-assistant-trimlight` as an **Integration** in
 HACS custom repositories, download Trimlight, and restart Home Assistant.
 The repository is not currently available for this installation path.
+
+[![Open your Home Assistant instance and add this repository to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=spdevpro&repository=home-assistant-trimlight&category=integration)
 
 ## Known limitations
 
