@@ -9,8 +9,8 @@ Trimlight Edge Pro HTTP API.
 
 > [!WARNING]
 > This integration and the supported Trimlight firmware are currently in beta.
-> This repository is prepared for local development but has not yet been
-> published on GitHub or in HACS.
+> It is distributed only as a HACS custom repository and is not listed in the
+> HACS default repository.
 
 ## Features
 
@@ -73,14 +73,19 @@ uv run --no-sync ruff format --check .
 uv run --no-sync mypy custom_components tests
 ```
 
-## Future HACS installation
+## HACS installation
 
-After the repository is published, add
-`https://github.com/spdevpro/home-assistant-trimlight` as an **Integration** in
-HACS custom repositories, download Trimlight, and restart Home Assistant.
-The repository is not currently available for this installation path.
+Use the button below to add this repository to HACS:
 
 [![Open your Home Assistant instance and add this repository to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=spdevpro&repository=home-assistant-trimlight&category=integration)
+
+Alternatively, add it manually:
+
+1. Open HACS and select **Custom repositories** from the menu.
+2. Add `https://github.com/spdevpro/home-assistant-trimlight` as an
+   **Integration**.
+3. Open Trimlight in HACS and download version `v0.1.0`.
+4. Restart Home Assistant.
 
 ## Known limitations
 
