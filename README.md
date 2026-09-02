@@ -4,104 +4,162 @@
   <img src="custom_components/trimlight/brand/logo.png" alt="Trimlight" width="256">
 </p>
 
-Local Home Assistant integration for Trimlight controllers using the
-Trimlight Edge Pro HTTP API.
+Trimlight for Home Assistant adds local control of compatible Trimlight controllers to Home Assistant.
+
+The integration automatically discovers supported Trimlight controllers and communicates with them directly over your local network.
 
 > [!WARNING]
-> This integration and the supported Trimlight firmware are currently in beta.
-> It is distributed only as a HACS custom repository and is not listed in the
-> HACS default repository.
+> This integration is currently in beta.
+>
+> It is distributed as a HACS custom repository and is not currently available in the HACS default repository or included with Home Assistant.
+
+## Supported devices
+
+Currently supported:
+
+- Trimlight Edge Pro
+
+Additional Trimlight devices may be supported in future releases.
 
 ## Features
 
-- Discovers controllers through `_tlight._tcp.local.` mDNS advertisements.
-- Uses the full device DID as the stable Home Assistant identifier.
-- Registers the MAC address exposed by `aiotrimlight` with the device registry.
-- Creates one config entry, one device, and one LightEntity per controller.
-- Supports ON/OFF, brightness, RGB, RGBW, and RGBWW according to the controller
-  IC type.
-- Polls the local HTTP API every 30 seconds and does not use a cloud service.
+- Automatic device discovery
+- Local network control
+- Power on/off
+- Brightness control
+- RGB color control
+- RGBW color control on supported installations
+- RGBWW color control on supported installations
+- Automatic recovery when a controller temporarily goes offline
+
+Available color controls depend on the lighting configuration connected to your controller.
 
 ## Requirements
 
-- Home Assistant 2026.9.0b0 or newer.
-- Python 3.14 or newer for development.
-- A controller firmware that exposes the DID-only mDNS identity and the V2
-  runtime-state/static-output HTTP API.
-- The controller and Home Assistant must be on the same local network with
-  mDNS traffic available between them.
+Before installing, make sure:
 
-## Configuration
+- You are running Home Assistant 2026.9.0b0 or newer.
+- Your Trimlight controller is running compatible firmware.
+- Your Trimlight controller and Home Assistant are connected to the same local network.
+- Local device discovery is available between the controller and Home Assistant.
 
-Trimlight supports automatic network discovery only. Power on the controller
-and connect it to the same network as Home Assistant. It will appear in the
-**Discovered** section under **Settings → Devices & services**.
+## Installation
 
-Manual Host configuration and active mDNS scanning are intentionally not
-implemented. Rediscovery of the same DID updates only that controller's Host.
-
-## Local development
-
-The development layout keeps this repository next to a Home Assistant Core
-checkout:
-
-```text
-HA/
-├── aiotrimlight/
-├── core/
-└── home-assistant-trimlight/
-```
-
-Link the integration into the Core development configuration:
-
-```shell
-cd /path/to/HA/core/config/custom_components
-ln -s ../../../home-assistant-trimlight/custom_components/trimlight trimlight
-```
-
-Home Assistant loads `config/custom_components/trimlight` before a built-in
-integration with the same domain. Restart Home Assistant after creating or
-changing the link.
-
-Install the locked development dependencies and run the checks with:
-
-```shell
-uv sync --locked --group test
-uv run --no-sync pytest --cov=custom_components.trimlight --cov-branch
-uv run --no-sync ruff check .
-uv run --no-sync ruff format --check .
-uv run --no-sync mypy custom_components tests
-```
-
-## HACS installation
+### Install with HACS
 
 Use the button below to add this repository to HACS:
 
 [![Open your Home Assistant instance and add this repository to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=spdevpro&repository=home-assistant-trimlight&category=integration)
 
-Alternatively, add it manually:
+Or add the repository manually:
 
-1. Open HACS and select **Custom repositories** from the menu.
-2. Add `https://github.com/spdevpro/home-assistant-trimlight` as an
-   **Integration**.
-3. Open Trimlight in HACS and download version `v0.1.0`.
-4. Restart Home Assistant.
+1. Open **HACS** in Home Assistant.
+2. Open the menu and select **Custom repositories**.
+3. Add:
 
-## Known limitations
+   `https://github.com/spdevpro/home-assistant-trimlight`
 
-- Effects, zones, schedules, music, DIY editors, and controller configuration
-  are not exposed.
-- When the controller is running an effect or reports inconsistent zone state,
-  Home Assistant can show the authoritative ON/OFF state but brightness and
-  color remain unknown.
-- Changing the controller IC type requires reloading the config entry.
+4. Select **Integration** as the repository type.
+5. Open **Trimlight** in HACS and select **Download**.
+6. Restart Home Assistant.
+
+## Add your Trimlight controller
+
+Trimlight controllers are discovered automatically.
+
+1. Power on your Trimlight controller.
+2. Make sure it is connected to the same local network as Home Assistant.
+3. In Home Assistant, go to **Settings → Devices & services**.
+4. Look for your Trimlight controller under **Discovered**.
+5. Select **Configure** and confirm the device.
+
+Your Trimlight lights will then be available in Home Assistant.
+
+Manual IP address configuration is not currently supported.
+
+## Using the integration
+
+Once configured, your Trimlight controller appears as a device in Home Assistant with a light entity.
+
+Depending on your lighting configuration, you can control:
+
+- On/off
+- Brightness
+- Color
+- White channels
+
+You can use the light in Home Assistant dashboards, scenes, scripts, and automations just like other Home Assistant lights.
+
+## Notes
+
+The integration currently exposes each supported Trimlight controller as a single light in Home Assistant.
+
+Trimlight controllers can also be controlled through the Trimlight app. Changes made in the app are automatically detected by Home Assistant.
+
+Some Trimlight app features, such as effects or lighting that uses different settings across multiple zones, cannot be represented as a single Home Assistant light state. While these modes are active, Home Assistant will continue to show the correct on/off state, but brightness and color may be unavailable until the controller returns to a uniform static color.
+
+Changing the color or brightness from Home Assistant will switch the controller back to a static lighting state that Home Assistant can represent.
+
+If the lighting type configured on the controller is changed, reload the Trimlight integration in Home Assistant.
+
+## Troubleshooting
+
+### My controller is not discovered
+
+Check that:
+
+- The controller is powered on.
+- Home Assistant and the controller are on the same local network.
+- Your network allows local device discovery between them.
+- You are using a supported controller and compatible firmware.
+
+You can also restart the controller and Home Assistant and wait briefly for discovery to occur again.
+
+### My light shows as unavailable
+
+If the controller loses power or network connectivity, Home Assistant may temporarily show the light as unavailable.
+
+The integration will automatically try to reconnect. Once the controller is reachable again, the light should recover without needing to be added again.
+
+### The integration does not appear after installing it
+
+Restart Home Assistant after installing or updating the integration through HACS.
+
+If necessary, refresh your browser after Home Assistant has restarted.
+
+## Updating
+
+When a new Trimlight integration version is available, HACS will show an available update.
+
+Install the update through HACS and restart Home Assistant when requested.
 
 ## Removal
 
-Remove each Trimlight config entry from **Settings → Devices & services**. For
-a HACS installation, remove the downloaded repository in HACS and restart Home
-Assistant. For local development, remove only the `trimlight` symlink from the
-Core configuration directory.
+To remove a Trimlight controller from Home Assistant:
+
+1. Go to **Settings → Devices & services**.
+2. Open the **Trimlight** integration.
+3. Remove the configured Trimlight entry.
+
+To completely uninstall the custom integration:
+
+1. Remove all Trimlight entries from **Settings → Devices & services**.
+2. Open **HACS** and remove the Trimlight integration.
+3. Restart Home Assistant.
+
+## Support
+
+If you encounter a problem, please report it through the GitHub issue tracker:
+
+https://github.com/spdevpro/home-assistant-trimlight/issues
+
+When reporting an issue, include:
+
+- Your Home Assistant version
+- Your Trimlight controller model
+- Your Trimlight firmware version
+- A description of the problem
+- Relevant Home Assistant logs, if available
 
 ## License
 
