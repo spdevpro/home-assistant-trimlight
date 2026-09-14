@@ -192,15 +192,15 @@ wheels = [
 
 [[package]]
 name = "aiotrimlight"
-version = "0.2.2"
+version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/19/48/8b510b8d54657bfee26f19b9a8ecc0316aebca480b74b58362a06d218662/aiotrimlight-0.2.2.tar.gz", hash = "sha256:958568b5c1cc458f6d65a4dd62fd10fb705d59610e3da94ef54daeaa24206fb2", size = 80058, upload-time = "2026-08-31T09:49:15.865Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6e/d0/50bba3cea521114280df3938d3557a1702737ae2224ceeb25364401c79e2/aiotrimlight-0.3.0.tar.gz", hash = "sha256:055b21ecbd10aaf7bf7b17e13fbe213e57b46990dcc38aafac2da4315980b783", size = 84540, upload-time = "2026-09-14T03:40:27.319Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f2/39/be06d27100482e50c561e6d5a9fe04bc45b1e24a3f5b4f6e09525a39bf0b/aiotrimlight-0.2.2-py3-none-any.whl", hash = "sha256:3e42cd417b47383395ad806c29c4a2f51a8a9683992fe62c275c391ca5841c2a", size = 8430, upload-time = "2026-08-31T09:49:14.749Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/6f/8a6b6c6f945e2eda11c7f1a4f165cf13a88e1e95115b2d6655ed44a00ac7/aiotrimlight-0.3.0-py3-none-any.whl", hash = "sha256:dd1620159aaea0248ec5b79abbf1e171f83e37c454686d432971074209369ea1", size = 9361, upload-time = "2026-09-14T03:40:26.201Z" },
 ]
 
 [[package]]
@@ -1165,7 +1165,7 @@ test = [
 
 [package.metadata.requires-dev]
 test = [
-    { name = "aiotrimlight", specifier = "==0.2.2" },
+    { name = "aiotrimlight", specifier = "==0.3.0" },
     { name = "mypy", specifier = ">=1.19.0,<2" },
     { name = "pytest-homeassistant-custom-component", specifier = "==0.13.361" },
     { name = "ruff", specifier = ">=0.13.0,<1" },

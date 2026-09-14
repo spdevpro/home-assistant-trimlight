@@ -6,7 +6,13 @@ from typing import cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from aiotrimlight import TrimlightDeviceInfo, TrimlightICType, TrimlightLightState
+from aiotrimlight import (
+    TrimlightDeviceInfo,
+    TrimlightICType,
+    TrimlightLightState,
+    TrimlightOutputMode,
+    TrimlightZoneState,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -30,7 +36,12 @@ def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
 def create_mock_trimlight_client() -> MagicMock:
     """Create a mocked Trimlight client."""
     client = MagicMock()
-    client.state = TrimlightLightState(is_on=False)
+    client.state = TrimlightLightState(
+        is_on=False,
+        zones=(TrimlightZoneState(255, True, TrimlightOutputMode.STATIC),),
+    )
+    client.get_effect_list = AsyncMock(return_value=())
+    client.play_effect = AsyncMock()
     client.get_device_info = AsyncMock(
         return_value=TrimlightDeviceInfo(
             firmware_version="1.0.38.1.0.13r",
@@ -48,6 +59,11 @@ def create_mock_trimlight_client() -> MagicMock:
         if "on" in state_changes:
             state_changes["is_on"] = state_changes.pop("on")
         client.state = replace(client.state, **state_changes)
+        if "red" in changes or "brightness" in changes:
+            client.state = replace(
+                client.state,
+                zones=(TrimlightZoneState(255, True, TrimlightOutputMode.STATIC),),
+            )
         return cast(TrimlightLightState, client.state)
 
     client.get_light_state = AsyncMock(side_effect=async_get_light_state)

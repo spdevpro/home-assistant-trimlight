@@ -18,6 +18,15 @@
     }
   },
   "exceptions": {
+    "effect_list_unavailable": {
+      "message": "The saved scene list could not be refreshed. Wait a moment and try again."
+    },
+    "invalid_effect": {
+      "message": "The saved scene {effect} is no longer available. Select a scene from the current list."
+    },
+    "scene_brightness_unsupported": {
+      "message": "Brightness can only be adjusted during uniform static output. Select a static color first."
+    },
     "command_failed": {
       "message": "Failed to control the Trimlight controller: {error}"
     },

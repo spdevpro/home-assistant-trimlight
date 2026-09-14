@@ -9,7 +9,7 @@ dependencies = []
 
 [dependency-groups]
 test = [
-  "aiotrimlight==0.2.2",
+  "aiotrimlight==0.3.0",
   "mypy>=1.19.0,<2",
   "pytest-homeassistant-custom-component==0.13.361",
   "ruff>=0.13.0,<1",

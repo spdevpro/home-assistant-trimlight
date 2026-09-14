@@ -30,6 +30,7 @@ Additional Trimlight devices may be supported in future releases.
 - RGB color control
 - RGBW color control on supported installations
 - RGBWW color control on supported installations
+- Saved scene selection through the light's effect list
 - Automatic recovery when a controller temporarily goes offline
 
 Available color controls depend on the lighting configuration connected to your controller.
@@ -87,8 +88,35 @@ Depending on your lighting configuration, you can control:
 - Brightness
 - Color
 - White channels
+- Saved scenes (effects)
 
 You can use the light in Home Assistant dashboards, scenes, scripts, and automations just like other Home Assistant lights.
+
+### Selecting a saved scene
+
+Open the light's controls and choose an effect. Options use the controller's saved scene name followed by its ID, for example `Ocean [ID 1]`. Duplicate names remain separate; unnamed scenes appear as `Scene [ID 3]`.
+
+You can also use the standard light action. Copy the exact option from your light's `effect_list`:
+
+```yaml
+action: light.turn_on
+target:
+  entity_id: light.your_trimlight
+data:
+  effect: "Ocean [ID 1]"
+```
+
+Selecting a scene plays it and turns the controller on. If the same action includes brightness or color, the scene takes priority and those adjustments are ignored. Ordinary on/off actions preserve the controller's output mode.
+
+The selected effect represents the **currently associated scene**, not a comparison with its saved settings. Unsaved previews and overwriting a scene in the Trimlight app keep the association; saving as a new scene follows the new ID reported by the controller. Home Assistant shows an association only when the controller is on, all enabled zones use effect output, and the ID exists in the saved scene list. Static output, disabled output, mixed zones, missing IDs and deleted scenes do not show a selected saved scene.
+
+Runtime state is polled every 30 seconds. The saved list refreshes at startup and every 5 minutes; an unfamiliar associated ID triggers an earlier refresh, limited to once per 30 seconds. Renaming or deleting a scene may therefore take up to 5 minutes to appear while the controller is reachable. Renamed options must also be updated in automations. Stale lists are refreshed before playback; an unsuccessful refresh or invalid option produces an error instead of guessing a scene.
+
+An empty scene library does not affect basic light controls. Older firmware that omits the association ID can still offer scene selection if its commands work, but the selected effect remains unknown. If the controller reports that scene queries are unsupported, only scene selection is disabled; reload the integration after a firmware update to check again. Temporary list errors are retried and preserve the last successful list.
+
+Scene brightness adjustment is not supported. Brightness-only actions check current output and are rejected unless it is uniform static output, including when an App change has happened since the last poll. To leave a scene, explicitly select a static color; you can then adjust brightness. Brightness zero retains Home Assistant's standard turn-off behavior. Scene editing, saving, deletion, combined-scene selection and individual Zone entities are not provided.
+
+No integration-specific actions, triggers or conditions are added; use the standard Home Assistant light actions and state-based automations.
 
 ## Notes
 
@@ -96,9 +124,9 @@ The integration currently exposes each supported Trimlight controller as a singl
 
 Trimlight controllers can also be controlled through the Trimlight app. Changes made in the app are automatically detected by Home Assistant.
 
-Some Trimlight app features, such as effects or lighting that uses different settings across multiple zones, cannot be represented as a single Home Assistant light state. While these modes are active, Home Assistant will continue to show the correct on/off state, but brightness and color may be unavailable until the controller returns to a uniform static color.
+Lighting that uses different settings across multiple zones cannot be represented as a single Home Assistant light state. During scenes or mixed output, Home Assistant continues to show the controller's on/off state, but brightness and color are unavailable until it returns to uniform static output. On/off reflects the controller switch, not a guarantee that LEDs are currently emitting light.
 
-Changing the color or brightness from Home Assistant will switch the controller back to a static lighting state that Home Assistant can represent.
+Changing the color from Home Assistant switches the controller back to static output. Brightness alone does not switch an active scene to static output.
 
 If the lighting type configured on the controller is changed, reload the Trimlight integration in Home Assistant.
 
@@ -132,6 +160,8 @@ If necessary, refresh your browser after Home Assistant has restarted.
 When a new Trimlight integration version is available, HACS will show an available update.
 
 Install the update through HACS and restart Home Assistant when requested.
+
+For a manual installation or an unreleased development checkout, copy `custom_components/trimlight` from the chosen revision into your Home Assistant configuration's `custom_components` directory, replacing the previous Trimlight folder, then restart Home Assistant. Home Assistant installs the pinned `aiotrimlight==0.3.0` dependency automatically; do not install a local development library into your running Home Assistant environment. Downloading a previous release does not include unreleased changes.
 
 ## Removal
 

@@ -1,16 +1,19 @@
 """Light platform for Trimlight controllers."""
 
 from collections.abc import Awaitable
-from typing import Any, NotRequired, TypedDict, Unpack, override
+from typing import Any, Unpack, override
 
-from aiotrimlight import TrimlightError, TrimlightICType, TrimlightLightState
+from aiotrimlight import TrimlightError, TrimlightICType, TrimlightOutputMode
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
+    EFFECT_OFF,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant, callback
@@ -20,7 +23,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_DID, DOMAIN, MANUFACTURER
-from .coordinator import TrimlightConfigEntry, TrimlightCoordinator
+from .coordinator import (
+    TrimlightConfigEntry,
+    TrimlightCoordinator,
+    TrimlightData,
+    TrimlightStateChanges,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -29,18 +37,6 @@ IC_COLOR_MODES = {
     TrimlightICType.RGBW: ColorMode.RGBW,
     TrimlightICType.RGBCW: ColorMode.RGBWW,
 }
-
-
-class _TrimlightStateChanges(TypedDict):
-    """Values that may be changed by a Home Assistant light command."""
-
-    on: NotRequired[bool]
-    brightness: NotRequired[int]
-    red: NotRequired[int]
-    green: NotRequired[int]
-    blue: NotRequired[int]
-    warm_white: NotRequired[int]
-    cold_white: NotRequired[int]
 
 
 async def async_setup_entry(
@@ -71,15 +67,46 @@ class TrimlightLight(CoordinatorEntity[TrimlightCoordinator], LightEntity):
             name=entry.title,
             sw_version=coordinator.device_info.firmware_version,
         )
-        self._client = coordinator.client
         self._color_mode = IC_COLOR_MODES[coordinator.device_info.ic_type]
         self._attr_color_mode = self._color_mode
         self._attr_supported_color_modes = {self._color_mode}
         self._apply_state(coordinator.data)
 
-    def _apply_state(self, state: TrimlightLightState) -> None:
+    def _apply_state(self, data: TrimlightData) -> None:
         """Apply controller readback to Home Assistant attributes."""
+        state = data.state
+        options = data.effect_options
+        self._attr_supported_features = (
+            LightEntityFeature.EFFECT
+            if data.effects is not None
+            else LightEntityFeature(0)
+        )
+        self._attr_effect_list = list(options) if data.effects is not None else None
+        self._attr_effect = None
+        modes = data.output_modes
+        if not state.is_on or (state.zones and TrimlightOutputMode.EFFECT not in modes):
+            self._attr_effect = EFFECT_OFF
+        elif modes == {TrimlightOutputMode.EFFECT}:
+            self._attr_effect = next(
+                (
+                    label
+                    for label, effect_id in options.items()
+                    if effect_id == state.scene_id
+                ),
+                None,
+            )
+        self._attr_color_mode = (
+            self._color_mode if data.is_static else ColorMode.UNKNOWN
+        )
+        if self._attr_effect not in (None, EFFECT_OFF):
+            self._attr_color_mode = ColorMode.ONOFF
         self._attr_is_on = state.is_on
+        self._attr_brightness = None
+        self._attr_rgb_color = None
+        self._attr_rgbw_color = None
+        self._attr_rgbww_color = None
+        if not data.is_static:
+            return
         self._attr_brightness = state.brightness
         red = state.red
         green = state.green
@@ -117,16 +144,14 @@ class TrimlightLight(CoordinatorEntity[TrimlightCoordinator], LightEntity):
         self._apply_state(self.coordinator.data)
         super()._handle_coordinator_update()
 
-    async def _async_set_state(self, **changes: Unpack[_TrimlightStateChanges]) -> None:
+    async def _async_set_state(self, **changes: Unpack[TrimlightStateChanges]) -> None:
         """Set state and publish the controller readback."""
-        await self._async_execute_command(self._client.set_light_state(**changes))
+        await self._async_execute_command(self.coordinator.async_set_state(**changes))
 
-    async def _async_execute_command(
-        self, command: Awaitable[TrimlightLightState]
-    ) -> None:
+    async def _async_execute_command(self, command: Awaitable[None]) -> None:
         """Execute a device command and publish its readback."""
         try:
-            state = await command
+            await command
         except TrimlightError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -134,12 +159,15 @@ class TrimlightLight(CoordinatorEntity[TrimlightCoordinator], LightEntity):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        self.coordinator.async_set_updated_data(state)
-
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        changes: _TrimlightStateChanges = {"on": True}
+        if ATTR_EFFECT in kwargs:
+            await self._async_execute_command(
+                self.coordinator.async_play_effect(kwargs[ATTR_EFFECT])
+            )
+            return
+        changes: TrimlightStateChanges = {"on": True}
         if ATTR_BRIGHTNESS in kwargs:
             changes["brightness"] = kwargs[ATTR_BRIGHTNESS]
 

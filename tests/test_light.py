@@ -8,6 +8,8 @@ from aiotrimlight import (
     TrimlightDeviceInfo,
     TrimlightICType,
     TrimlightLightState,
+    TrimlightOutputMode,
+    TrimlightZoneState,
 )
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.components.light import (
@@ -273,7 +275,7 @@ async def test_command_failure_keeps_previous_state(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 24},
+            {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -308,6 +310,7 @@ async def test_coordinator_refreshes_external_state(
         blue=30,
         warm_white=40,
         cold_white=50,
+        zones=(TrimlightZoneState(255, True, TrimlightOutputMode.STATIC),),
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
